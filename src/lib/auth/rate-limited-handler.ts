@@ -1,10 +1,11 @@
 import "server-only";
 import { toNextJsHandler } from "better-auth/next-js";
+import { withError } from "@/lib/api/respond";
+import { withLogging } from "@/lib/api/with-logging";
 import { auth } from "@/lib/auth";
 import { rateLimit } from "@/server/policies/rate-limit";
 
-const { GET } = toNextJsHandler(auth.handler);
-const post = toNextJsHandler(auth.handler).POST;
+const inner = toNextJsHandler(auth.handler);
 
 const RATE_LIMITED_PATHS = ["/api/auth/sign-in", "/api/auth/sign-up"];
 const LIMIT = 10;
@@ -18,7 +19,7 @@ function clientIp(req: Request): string {
   );
 }
 
-async function POST(req: Request): Promise<Response> {
+async function post(req: Request): Promise<Response> {
   const { pathname } = new URL(req.url);
   if (
     RATE_LIMITED_PATHS.some((p) => pathname.startsWith(p)) &&
@@ -29,7 +30,8 @@ async function POST(req: Request): Promise<Response> {
       { status: 429 },
     );
   }
-  return post(req);
+  return inner.POST(req);
 }
 
-export { GET, POST };
+export const GET = withLogging(withError(inner.GET));
+export const POST = withLogging(withError(post));
