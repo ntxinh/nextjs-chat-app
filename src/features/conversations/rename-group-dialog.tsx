@@ -36,7 +36,13 @@ export function RenameGroupDialog({
   const trimmed = name.trim();
 
   return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
+    <Dialog
+      onOpenChange={(open) => {
+        if (!open) rename.reset();
+        onOpenChange(open);
+      }}
+      open={open}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t("renameGroup")}</DialogTitle>

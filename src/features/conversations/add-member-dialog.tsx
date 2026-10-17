@@ -19,7 +19,13 @@ export function AddMemberDialog({
   const addMember = useAddMember(conversationId);
 
   return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
+    <Dialog
+      onOpenChange={(open) => {
+        if (!open) addMember.reset();
+        onOpenChange(open);
+      }}
+      open={open}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t("addMember")}</DialogTitle>

@@ -15,7 +15,7 @@ export function DetailsPanel({
   const t = useTranslations("conversations");
 
   return (
-    <aside className="hidden h-full w-80 flex-col border-border border-l lg:flex">
+    <aside aria-label={t("details")} className="hidden h-full w-80 flex-col border-border border-l lg:flex">
       <div className="flex items-center justify-between border-border border-b p-3">
         <h2 className="font-semibold text-base">{t("details")}</h2>
         <Button

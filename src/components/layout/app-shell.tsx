@@ -3,9 +3,12 @@
 import { cn } from "cn";
 import { ArrowLeft, PanelRight } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
 import { DetailsPanel } from "@/components/layout/details-panel";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ConversationHeader } from "@/features/conversations/conversation-header";
 import { ConversationDetails } from "@/features/conversations/details-panel";
 import { Link, usePathname } from "@/i18n/navigation";
@@ -20,6 +23,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const inConversation = pathname.startsWith("/conversations/");
   const conversationId = inConversation ? pathname.split("/")[2] : null;
   const inSubPage = !inConversation && pathname !== "/";
+
+  // Details slides over below lg (DESIGN.md §sm); static column at ≥lg.
+  const [isLg, setIsLg] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 64em)");
+    const sync = () => setIsLg(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   return (
     <div
@@ -62,7 +75,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Button
             aria-label={t("details")}
             aria-pressed={detailsOpen}
-            className="hidden size-11 lg:inline-flex"
+            className="size-11"
             onClick={toggleDetails}
             size="icon"
             variant="ghost"
@@ -72,10 +85,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
         <div className="flex min-h-0 flex-1 flex-col">{children}</div>
       </main>
-      {detailsOpen && (
+      {detailsOpen && isLg && (
         <DetailsPanel onClose={closeDetails}>
           {conversationId ? <ConversationDetails conversationId={conversationId} /> : null}
         </DetailsPanel>
+      )}
+      {!isLg && (
+        <Sheet
+          onOpenChange={(open) => (open ? toggleDetails() : closeDetails())}
+          open={detailsOpen && inConversation}
+        >
+          <SheetContent className="gap-0 p-0" side="right">
+            <SheetHeader className="border-border border-b p-3">
+              <SheetTitle>{tv("details")}</SheetTitle>
+            </SheetHeader>
+            <ScrollArea className="min-h-0 flex-1">
+              {conversationId && <ConversationDetails conversationId={conversationId} />}
+            </ScrollArea>
+          </SheetContent>
+        </Sheet>
       )}
     </div>
   );

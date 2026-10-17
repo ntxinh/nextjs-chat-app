@@ -9,9 +9,12 @@ import { usePresenceLabel } from "@/features/conversations/presence";
 
 export function ConversationHeader({ conversationId }: { conversationId: string }) {
   const t = useTranslations("conversations");
-  const { data, isPending } = useConversation(conversationId);
+  const { data, isPending, isError } = useConversation(conversationId);
 
-  if (isPending || !data) {
+  if (isError) {
+    return <h2 className="min-w-0 flex-1 truncate font-semibold text-base">{t("title")}</h2>;
+  }
+  if (isPending) {
     return (
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <Skeleton className="size-9 rounded-full" />
@@ -22,6 +25,7 @@ export function ConversationHeader({ conversationId }: { conversationId: string 
       </div>
     );
   }
+  if (!data) return null;
 
   const name = conversationName(data, t("unknownName"));
 
