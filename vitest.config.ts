@@ -3,8 +3,11 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [tsconfigPaths()],
+  resolve: {
+    // Tests run in node, not Next — neuter server-only's throw-on-import.
+    alias: { "server-only": "./tests/integration/mocks/server-only.ts" },
+  },
   test: {
-    passWithNoTests: true,
     projects: [
       {
         test: {
