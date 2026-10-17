@@ -24,7 +24,9 @@ export function ConversationView({ conversationId }: { conversationId: string })
 
   return (
     <>
-      <MessageList conversationId={conversationId} />
+      {/* key: scroll/separator refs are per-conversation — Next reuses this
+          component across [id] navigations, so remount to reset them */}
+      <MessageList conversationId={conversationId} key={conversationId} />
       <MessageComposer conversationId={conversationId} />
     </>
   );

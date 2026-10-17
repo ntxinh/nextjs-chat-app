@@ -3,7 +3,7 @@
 import type { InfiniteData } from "@tanstack/react-query";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
-import { apiFetch } from "@/lib/api-client";
+import { ApiClientError, apiFetch } from "@/lib/api-client";
 
 /** Wire shape of GET /conversations/{id}/messages — dates arrive as ISO strings. */
 export type Message = {
@@ -43,6 +43,8 @@ export function useMessages(conversationId: string) {
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => last.nextCursor,
     refetchInterval: 5_000,
+    // 404/403 are terminal — don't sit through retry backoff before isError.
+    retry: (count, error) => !(error instanceof ApiClientError && error.status < 500) && count < 2,
   });
 }
 
@@ -100,6 +102,7 @@ export function usePendingMessages(conversationId: string): UiMessage[] {
       return () => pendingListeners.delete(cb);
     },
     () => pendingVersion,
+    () => pendingVersion, // server snapshot — without it SSR bails out entirely
   );
   return getPending(conversationId);
 }
