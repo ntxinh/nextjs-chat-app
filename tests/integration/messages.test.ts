@@ -242,6 +242,27 @@ describe("listConversations preview / unread fill", () => {
   });
 });
 
+describe("unread watermark edges", () => {
+  it("soft-deleted and own messages never count; unwatermarked counts all", async () => {
+    // No member has a watermark yet → every other member's message counts,
+    // excluding soft-deleted ones.
+    const m1 = await sendMessage(convId, alice.id, "gone");
+    const m2 = await sendMessage(convId, bob.id, "kept");
+    await pinCreatedAt(m1.message.id, "2026-02-01T12:00:01Z");
+    await pinCreatedAt(m2.message.id, "2026-02-01T12:00:02Z");
+    await deleteMessage(m1.message.id, alice.id);
+
+    // sender of the only remaining message sees zero; non-sender member counts it
+    let list = await listConversations(bob.id);
+    expect(getConv(list.items, convId).unreadCount).toBe(0);
+    list = await listConversations(carol.id);
+    expect(getConv(list.items, convId).unreadCount).toBe(1);
+    await sendMessage(convId, alice.id, "for carol");
+    list = await listConversations(carol.id);
+    expect(getConv(list.items, convId).unreadCount).toBe(2);
+  });
+});
+
 describe("markRead message check", () => {
   it("404s on nonexistent or foreign-conversation message ids", async () => {
     const dm = await createDirectConversation(alice.id, dan.id);

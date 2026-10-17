@@ -6,7 +6,9 @@ async function sendMessage(page: Page, text: string) {
   await page.getByPlaceholder("Message").press("Enter");
 }
 
-const runId = Date.now().toString(36);
+// pid suffix: desktop+mobile workers spawn in the same ms — Date.now() alone
+// collides and both projects write identical rows into the shared seed DB.
+const runId = `${Date.now().toString(36)}-${process.pid.toString(36)}`;
 
 // Serial: shared seed DB + rate-limited login.
 test.describe
@@ -108,5 +110,79 @@ test.describe
       await page.unroute("**/api/v1/conversations/*/messages*");
       await row.getByRole("button", { name: "Retry" }).click();
       await expect(row.getByText("Couldn't send")).not.toBeVisible({ timeout: 15_000 });
+    });
+
+    // Throwaway group → unread state is never shared with other tests.
+    test("unread badge, clearing, and 'New messages' separator", async ({ browser }) => {
+      const alice = await newAuthedPage(browser, "alice@dev.local");
+      const dan = await newAuthedPage(browser, "dan@dev.local");
+      const aliceCtx = alice.context();
+      const danCtx = dan.context();
+      const groupName = `Unread ${runId}`;
+      try {
+        await alice.goto("/en");
+        await alice.getByRole("button", { name: "New chat" }).click();
+        await alice.getByRole("menuitem", { name: "New group" }).click();
+        const dialog = alice.getByRole("dialog");
+        await dialog.locator("input").first().fill(groupName);
+        await dialog.getByRole("searchbox", { name: "Search users" }).fill("dan");
+        await dialog.getByRole("checkbox").check();
+        await dialog.getByRole("button", { name: "Create" }).click();
+        await alice.waitForURL(/\/en\/conversations\//);
+        const convUrl = alice.url();
+
+        // Composer clears on send success — wait for it or the second fill
+        // lands while the first send is still isPending and gets dropped.
+        await sendMessage(alice, `unread-1 ${runId}`);
+        await expect(alice.getByPlaceholder("Message")).toHaveValue("");
+        await sendMessage(alice, `unread-2 ${runId}`);
+        await expect(
+          alice.getByRole("log").getByText(`unread-2 ${runId}`, { exact: true }),
+        ).toBeVisible();
+
+        // Sender's own messages never count → no badge, no separator for alice.
+        await alice.goto("/en");
+        await expect(alice.getByRole("link", { name: groupName }).getByLabel(/unread/)).toHaveCount(
+          0,
+        );
+        await expect(alice.getByRole("log").locator("li", { hasText: "New messages" })).toHaveCount(
+          0,
+        );
+        await alice.goto(convUrl);
+        await expect(alice.getByRole("log").locator("li", { hasText: "New messages" })).toHaveCount(
+          0,
+        );
+
+        // Recipient gets a badge (sidebar polls at 15s → headroom).
+        await dan.goto("/en");
+        const danItem = dan.getByRole("link", { name: groupName });
+        await expect(danItem.getByLabel(/unread/)).toBeVisible({ timeout: 20_000 });
+
+        // Opening it: separator renders exactly once, directly above the first
+        // unread message; own bubble starts (dan sent nothing).
+        await danItem.click();
+        await dan.waitForURL(/\/en\/conversations\//);
+        const log = dan.getByRole("log");
+        const sep = log.locator("li", { hasText: "New messages" });
+        await expect(sep).toHaveCount(1);
+        await expect(sep.locator("xpath=following-sibling::*[1]")).toContainText(
+          `unread-1 ${runId}`,
+        );
+
+        // markRead fired on mount → badge is gone next time the list loads.
+        await dan.goto("/en");
+        await expect(dan.getByRole("link", { name: groupName }).getByLabel(/unread/)).toHaveCount(
+          0,
+          { timeout: 20_000 },
+        );
+
+        // A fully-read viewer never sees the separator.
+        await dan.goto(convUrl);
+        await expect(log.getByText(`unread-2 ${runId}`, { exact: true })).toBeVisible();
+        await expect(log.locator("li", { hasText: "New messages" })).toHaveCount(0);
+      } finally {
+        await aliceCtx.close();
+        await danCtx.close();
+      }
     });
   });
