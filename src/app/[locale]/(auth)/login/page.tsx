@@ -1,13 +1,15 @@
-import { useTranslations } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
-import { use } from "react";
+import { connection } from "next/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { LoginForm } from "@/features/auth/login-form";
 import { Link } from "@/i18n/navigation";
 
-export default function LoginPage({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = use(params);
+// CSP nonces are per-request — this page must render dynamically or its
+// cached HTML carries nonce-free inline scripts that CSP then blocks.
+export default async function LoginPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  await connection();
   setRequestLocale(locale);
-  const t = useTranslations("auth");
+  const t = await getTranslations("auth");
 
   return (
     <div className="flex flex-col gap-6">

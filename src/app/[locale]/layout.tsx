@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -17,6 +18,9 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  // CSP nonces are per-request: keep every page dynamic so its inline
+  // scripts get stamped — a prerendered shell ships nonce-free scripts.
+  await connection();
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }

@@ -63,6 +63,18 @@ test.describe
       await expect(
         page.getByText("This conversation doesn't exist or you're not a member"),
       ).toBeVisible({ timeout: 15_000 });
+
+      // cleanup: leave the throwaway group — leftover groups crowd the
+      // 20-item sidebar page and flake sibling specs
+      await page.getByRole("link", { name: new RegExp(throwaway) }).click();
+      await page.waitForURL(/\/en\/conversations\//);
+      await page.getByRole("button", { name: "Details" }).click();
+      await details.getByRole("button", { name: "Leave conversation" }).click();
+      await page
+        .getByRole("dialog", { name: "Leave conversation?" })
+        .getByRole("button", { name: "Leave conversation" })
+        .click();
+      await page.waitForURL(/\/en\/?$/);
     });
 
     test("owner-less member leaves a group and it disappears from the list", async ({

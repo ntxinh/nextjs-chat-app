@@ -180,6 +180,18 @@ test.describe
         await dan.goto(convUrl);
         await expect(log.getByText(`unread-2 ${runId}`, { exact: true })).toBeVisible();
         await expect(log.locator("li", { hasText: "New messages" })).toHaveCount(0);
+
+        // cleanup: alice leaves so the throwaway stops crowding her 20-item
+        // sidebar page (flake source for sibling specs)
+        await alice.goto(convUrl);
+        await alice.getByRole("button", { name: "Details" }).click();
+        const aliceDetails = alice.getByRole("complementary").nth(1);
+        await aliceDetails.getByRole("button", { name: "Leave conversation" }).click();
+        await alice
+          .getByRole("dialog", { name: "Leave conversation?" })
+          .getByRole("button", { name: "Leave conversation" })
+          .click();
+        await alice.waitForURL(/\/en\/?$/);
       } finally {
         await aliceCtx.close();
         await danCtx.close();
