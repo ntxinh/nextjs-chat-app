@@ -17,6 +17,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const tv = useTranslations("conversations");
 
   const inConversation = pathname.startsWith("/conversations/");
+  // Sub-pages (settings) get mobile back-nav like conversations.
+  const inSubPage = !inConversation && pathname !== "/";
 
   return (
     <div
@@ -26,14 +28,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         detailsOpen ? "lg:grid-cols-[24rem_1fr_20rem]" : "lg:grid-cols-[24rem_1fr]",
       )}
     >
-      <div className={cn("min-h-0 min-w-0", inConversation && "max-md:hidden")}>
+      <div className={cn("min-h-0 min-w-0", (inConversation || inSubPage) && "max-md:hidden")}>
         <Sidebar />
       </div>
       <main
-        className={cn("flex min-h-0 min-w-0 flex-col", inConversation ? "flex" : "hidden md:flex")}
+        className={cn(
+          "flex min-h-0 min-w-0 flex-col",
+          inConversation || inSubPage ? "flex" : "hidden md:flex",
+        )}
       >
         <header className="flex items-center gap-2 border-border border-b p-3">
-          {inConversation && (
+          {(inConversation || inSubPage) && (
             <Button
               aria-label={tv("backToChats")}
               asChild
@@ -47,7 +52,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Button>
           )}
           <h2 className="min-w-0 flex-1 truncate font-semibold text-base">
-            {inConversation ? tv("title") : tv("emptyTitle")}
+            {inConversation ? tv("title") : inSubPage ? t("settings") : tv("emptyTitle")}
           </h2>
           <Button
             aria-label={t("details")}

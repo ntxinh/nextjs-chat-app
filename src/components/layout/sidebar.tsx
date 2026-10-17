@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Search, SquarePen } from "lucide-react";
+import { LogOut, Search, Settings, SquarePen } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { signOut, useSession } from "@/lib/auth/client";
 
 export function Sidebar() {
@@ -58,6 +58,11 @@ export function Sidebar() {
         </Avatar>
         <span className="min-w-0 flex-1 truncate font-medium text-sm">{userName}</span>
         <ThemeToggle />
+        <Button aria-label={t("settings")} asChild className="size-11" size="icon" variant="ghost">
+          <Link href="/settings">
+            <Settings aria-hidden="true" />
+          </Link>
+        </Button>
         <Button
           aria-label={ta("signOut")}
           className="size-11"
