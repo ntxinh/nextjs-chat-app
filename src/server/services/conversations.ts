@@ -3,6 +3,7 @@ import { decodeCursor, encodeCursor } from "@/lib/cursor";
 import { readyDb } from "@/lib/db";
 import { normalizePair } from "@/lib/dm-pair";
 import { AppError } from "@/lib/errors/app-error";
+import { withSpan } from "@/lib/observability/tracer";
 import { assertMembership } from "@/server/policies/conversations";
 import * as repo from "@/server/repositories/conversations";
 import * as msgRepo from "@/server/repositories/messages";
@@ -48,6 +49,15 @@ export async function createDirectConversation(
   actorId: string,
   otherUserId: string,
 ): Promise<{ conversationId: string; created: boolean }> {
+  return withSpan("conversations.createDirect", {}, () =>
+    createDirectConversationImpl(actorId, otherUserId),
+  );
+}
+
+async function createDirectConversationImpl(
+  actorId: string,
+  otherUserId: string,
+): Promise<{ conversationId: string; created: boolean }> {
   const db = await readyDb();
   let userA: string;
   let userB: string;
@@ -83,6 +93,16 @@ export async function createDirectConversation(
 }
 
 export async function createGroup(
+  actorId: string,
+  name: string,
+  memberIds: string[],
+): Promise<{ conversationId: string }> {
+  return withSpan("conversations.createGroup", { memberCount: memberIds.length }, () =>
+    createGroupImpl(actorId, name, memberIds),
+  );
+}
+
+async function createGroupImpl(
   actorId: string,
   name: string,
   memberIds: string[],

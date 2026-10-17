@@ -2,6 +2,7 @@ import "server-only";
 import { decodeCursor, encodeCursor } from "@/lib/cursor";
 import { readyDb } from "@/lib/db";
 import { AppError } from "@/lib/errors/app-error";
+import { withSpan } from "@/lib/observability/tracer";
 import { MESSAGE_BODY_MAX } from "@/lib/validation/messages";
 import { assertMembership } from "@/server/policies/conversations";
 import { assertOwnership } from "@/server/policies/messages";
@@ -50,6 +51,17 @@ export async function sendMessage(
   body: string,
   clientMessageId?: string,
 ): Promise<{ message: MessageDTO; deduplicated: boolean }> {
+  return withSpan("messages.send", { bodyLength: body.length }, () =>
+    sendMessageImpl(conversationId, senderId, body, clientMessageId),
+  );
+}
+
+async function sendMessageImpl(
+  conversationId: string,
+  senderId: string,
+  body: string,
+  clientMessageId?: string,
+): Promise<{ message: MessageDTO; deduplicated: boolean }> {
   const db = await readyDb();
   await assertMembership(conversationId, senderId);
   const trimmed = body.trim();
@@ -86,6 +98,17 @@ export async function sendMessage(
 
 /** Newest-first page (DESC) — callers reverse for display order. */
 export async function listMessages(
+  actorId: string,
+  conversationId: string,
+  cursor?: string,
+  limit = 50,
+): Promise<{ items: MessageDTO[]; nextCursor: string | null }> {
+  return withSpan("messages.list", { limit }, () =>
+    listMessagesImpl(actorId, conversationId, cursor, limit),
+  );
+}
+
+async function listMessagesImpl(
   actorId: string,
   conversationId: string,
   cursor?: string,
