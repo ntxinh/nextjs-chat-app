@@ -3,8 +3,15 @@
 import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-export function DetailsPanel({ onClose }: { onClose: () => void }) {
+export function DetailsPanel({
+  onClose,
+  children,
+}: {
+  onClose: () => void;
+  children?: React.ReactNode;
+}) {
   const t = useTranslations("conversations");
 
   return (
@@ -21,9 +28,9 @@ export function DetailsPanel({ onClose }: { onClose: () => void }) {
           <X aria-hidden="true" />
         </Button>
       </div>
-      <div className="flex-1 p-4">
-        <p className="text-muted-foreground text-sm">{t("detailsEmpty")}</p>
-      </div>
+      <ScrollArea className="min-h-0 flex-1">
+        {children ?? <p className="p-4 text-muted-foreground text-sm">{t("detailsEmpty")}</p>}
+      </ScrollArea>
     </aside>
   );
 }

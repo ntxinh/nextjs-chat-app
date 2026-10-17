@@ -6,6 +6,8 @@ import { useTranslations } from "next-intl";
 import { DetailsPanel } from "@/components/layout/details-panel";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Button } from "@/components/ui/button";
+import { ConversationHeader } from "@/features/conversations/conversation-header";
+import { ConversationDetails } from "@/features/conversations/details-panel";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useUiStore } from "@/stores/ui";
 
@@ -16,7 +18,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const tv = useTranslations("conversations");
 
   const inConversation = pathname.startsWith("/conversations/");
-  // Sub-pages (settings) get mobile back-nav like conversations.
+  const conversationId = inConversation ? pathname.split("/")[2] : null;
   const inSubPage = !inConversation && pathname !== "/";
 
   return (
@@ -50,9 +52,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             </Button>
           )}
-          <h2 className="min-w-0 flex-1 truncate font-semibold text-base">
-            {inConversation ? tv("title") : inSubPage ? t("settings") : tv("emptyTitle")}
-          </h2>
+          {inConversation && conversationId ? (
+            <ConversationHeader conversationId={conversationId} />
+          ) : (
+            <h2 className="min-w-0 flex-1 truncate font-semibold text-base">
+              {inSubPage ? t("settings") : tv("emptyTitle")}
+            </h2>
+          )}
           <Button
             aria-label={t("details")}
             aria-pressed={detailsOpen}
@@ -66,7 +72,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
         <div className="flex min-h-0 flex-1 flex-col">{children}</div>
       </main>
-      {detailsOpen && <DetailsPanel onClose={closeDetails} />}
+      {detailsOpen && (
+        <DetailsPanel onClose={closeDetails}>
+          {conversationId ? <ConversationDetails conversationId={conversationId} /> : null}
+        </DetailsPanel>
+      )}
     </div>
   );
 }

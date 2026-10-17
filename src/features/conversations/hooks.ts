@@ -22,8 +22,9 @@ export function useConversations() {
 
 export function useConversation(id: string) {
   return useQuery({
-    queryKey: ["conversations", id],
+    queryKey: ["conversations", "detail", id],
     queryFn: () => apiFetch<ConversationDetail>(`/api/v1/conversations/${id}`),
+    refetchInterval: 15_000, // members' lastSeenAt goes stale otherwise
   });
 }
 
@@ -48,6 +49,48 @@ export function useCreateConversation() {
     onSuccess: ({ conversationId }) => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
       router.push(`/conversations/${conversationId}`);
+    },
+  });
+}
+
+export function useUpdateConversation(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) =>
+      apiFetch<ConversationDetail>(`/api/v1/conversations/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ name }),
+      }),
+    onSuccess: (detail) => {
+      queryClient.setQueryData(["conversations", "detail", id], detail);
+      queryClient.invalidateQueries({ queryKey: ["conversations"], exact: true });
+    },
+  });
+}
+
+export function useAddMember(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) =>
+      apiFetch(`/api/v1/conversations/${id}/members`, {
+        method: "POST",
+        body: JSON.stringify({ userId }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["conversations", "detail", id] });
+    },
+  });
+}
+
+export function useLeaveConversation(id: string) {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  return useMutation({
+    mutationFn: () => apiFetch(`/api/v1/conversations/${id}/members/me`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ["conversations", "detail", id] });
+      queryClient.invalidateQueries({ queryKey: ["conversations"], exact: true });
+      router.push("/");
     },
   });
 }
