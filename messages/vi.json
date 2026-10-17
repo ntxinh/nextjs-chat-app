@@ -39,7 +39,8 @@
     "searchPlaceholder": "Tìm người dùng…",
     "searchHint": "Nhập ít nhất 2 ký tự để tìm kiếm",
     "searching": "Đang tìm…",
-    "noResults": "Không tìm thấy người dùng"
+    "noResults": "Không tìm thấy người dùng",
+    "searchFailed": "Tìm kiếm thất bại — vui lòng thử lại"
   },
   "theme": {
     "light": "Sáng",

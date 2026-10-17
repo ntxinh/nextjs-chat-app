@@ -63,7 +63,13 @@ export function NewGroupDialog({
             onClick={() =>
               create.mutate(
                 { type: "group", name: name.trim(), memberIds: [...memberIds] },
-                { onSuccess: () => onOpenChange(false) },
+                {
+                  onSuccess: () => {
+                    setName("");
+                    setMemberIds(new Set());
+                    onOpenChange(false);
+                  },
+                },
               )
             }
           >

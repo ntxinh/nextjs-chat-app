@@ -22,10 +22,9 @@ export function NewDmDialog({
           <DialogTitle>{t("newDirect")}</DialogTitle>
         </DialogHeader>
         <UserSearch
-          onPick={(userId) => {
-            create.mutate({ type: "direct", userId });
-            onOpenChange(false);
-          }}
+          onPick={(userId) =>
+            create.mutate({ type: "direct", userId }, { onSuccess: () => onOpenChange(false) })
+          }
         />
         {create.isError && (
           <p className="text-error text-sm" role="alert">

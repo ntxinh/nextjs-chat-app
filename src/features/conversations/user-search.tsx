@@ -22,7 +22,7 @@ export function UserSearch({
 }) {
   const t = useTranslations("users");
   const [query, setQuery] = useState("");
-  const { data, isPending, isFetching } = useUserSearch(query);
+  const { data, isPending, isFetching, isError } = useUserSearch(query);
   const enabled = query.trim().length >= 2;
 
   return (
@@ -37,6 +37,8 @@ export function UserSearch({
       <ScrollArea className="h-56">
         {!enabled ? (
           <p className="p-3 text-muted-foreground text-sm">{t("searchHint")}</p>
+        ) : isError ? (
+          <p className="p-3 text-error text-sm">{t("searchFailed")}</p>
         ) : isPending || (isFetching && !data) ? (
           <p className="p-3 text-muted-foreground text-sm">{t("searching")}</p>
         ) : !data || data.items.length === 0 ? (
