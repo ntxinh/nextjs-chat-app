@@ -3,15 +3,14 @@
 import { cn } from "cn";
 import { ArrowLeft, PanelRight } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import { DetailsPanel } from "@/components/layout/details-panel";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Button } from "@/components/ui/button";
 import { Link, usePathname } from "@/i18n/navigation";
+import { useUiStore } from "@/stores/ui";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  // ponytail: local useState until the Task 19 Zustand store owns shell state.
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  const { detailsOpen, toggleDetails, closeDetails } = useUiStore();
   const pathname = usePathname();
   const t = useTranslations("nav");
   const tv = useTranslations("conversations");
@@ -58,7 +57,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             aria-label={t("details")}
             aria-pressed={detailsOpen}
             className="hidden size-11 lg:inline-flex"
-            onClick={() => setDetailsOpen((open) => !open)}
+            onClick={toggleDetails}
             size="icon"
             variant="ghost"
           >
@@ -67,7 +66,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
         <div className="flex min-h-0 flex-1 flex-col">{children}</div>
       </main>
-      {detailsOpen && <DetailsPanel onClose={() => setDetailsOpen(false)} />}
+      {detailsOpen && <DetailsPanel onClose={closeDetails} />}
     </div>
   );
 }

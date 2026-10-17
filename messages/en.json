@@ -19,7 +19,27 @@
     "details": "Details",
     "closeDetails": "Close details",
     "detailsEmpty": "Conversation details will appear here",
-    "backToChats": "Back to chats"
+    "backToChats": "Back to chats",
+    "newConversation": "New conversation",
+    "newDirect": "New direct message",
+    "newGroup": "New group",
+    "groupName": "Group name",
+    "create": "Create",
+    "creating": "Creating…",
+    "createFailed": "Couldn't create the conversation — please try again",
+    "loadFailed": "Couldn't load conversations",
+    "retry": "Retry",
+    "noMatch": "No conversations match your search",
+    "noMessages": "No messages yet",
+    "unknownName": "Unknown",
+    "unread": "{count, plural, one {# unread message} other {# unread messages}}"
+  },
+  "users": {
+    "search": "Search users",
+    "searchPlaceholder": "Search people…",
+    "searchHint": "Type at least 2 characters to search",
+    "searching": "Searching…",
+    "noResults": "No users found"
   },
   "theme": {
     "light": "Light",

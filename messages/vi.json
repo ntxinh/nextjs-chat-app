@@ -19,7 +19,27 @@
     "details": "Chi tiết",
     "closeDetails": "Đóng chi tiết",
     "detailsEmpty": "Chi tiết cuộc trò chuyện sẽ hiển thị ở đây",
-    "backToChats": "Quay lại trò chuyện"
+    "backToChats": "Quay lại trò chuyện",
+    "newConversation": "Cuộc trò chuyện mới",
+    "newDirect": "Tin nhắn trực tiếp mới",
+    "newGroup": "Nhóm mới",
+    "groupName": "Tên nhóm",
+    "create": "Tạo",
+    "creating": "Đang tạo…",
+    "createFailed": "Không thể tạo cuộc trò chuyện — vui lòng thử lại",
+    "loadFailed": "Không thể tải cuộc trò chuyện",
+    "retry": "Thử lại",
+    "noMatch": "Không có cuộc trò chuyện nào khớp",
+    "noMessages": "Chưa có tin nhắn",
+    "unknownName": "Không rõ",
+    "unread": "{count, plural, other {# tin nhắn chưa đọc}}"
+  },
+  "users": {
+    "search": "Tìm kiếm người dùng",
+    "searchPlaceholder": "Tìm người dùng…",
+    "searchHint": "Nhập ít nhất 2 ký tự để tìm kiếm",
+    "searching": "Đang tìm…",
+    "noResults": "Không tìm thấy người dùng"
   },
   "theme": {
     "light": "Sáng",
