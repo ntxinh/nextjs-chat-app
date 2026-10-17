@@ -21,6 +21,8 @@ export default defineConfig({
           name: "integration",
           include: ["tests/integration/**/*.test.ts"],
           environment: "node",
+          // Single shared .test.db — parallel files race on SQLite writes (BUSY).
+          fileParallelism: false,
           globalSetup: ["tests/integration/global-setup.ts"],
         },
       },
