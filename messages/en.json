@@ -1,0 +1,8 @@
+{
+  "common": { "appName": "Chat" },
+  "nav": {
+    "chats": "Chats",
+    "contacts": "Contacts",
+    "settings": "Settings"
+  }
+}

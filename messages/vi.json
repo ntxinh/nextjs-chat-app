@@ -1,0 +1,8 @@
+{
+  "common": { "appName": "Chat" },
+  "nav": {
+    "chats": "Trò chuyện",
+    "contacts": "Liên hệ",
+    "settings": "Cài đặt"
+  }
+}
