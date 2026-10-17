@@ -9,6 +9,11 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { readyDb } from "@/lib/db";
 import { user } from "@/lib/db/schema";
+import {
+  createDirectConversation,
+  createGroup,
+  listConversations,
+} from "@/server/services/conversations";
 
 const SEED_USERS = [
   { email: "alice@dev.local", name: "Alice" },
@@ -49,9 +54,31 @@ async function main() {
     }
   }
 
-  // TODO(Task 17): wire conversation seeding through the conversation service —
-  // DM alice↔bob + "Dev Chat" group (alice owner, all 4 members). Messages land
-  // with Task 21's schema. Raw inserts would duplicate service logic.
+  // Conversation seeding through the real services. Idempotent: the DM pair PK
+  // makes createDirectConversation return created:false on rerun; "Dev Chat" is
+  // checked by name (groups carry no dedup constraint by design).
+  const idByEmail = new Map(
+    (await db.select({ id: user.id, email: user.email }).from(user)).map((u) => [u.email, u.id]),
+  );
+  const [aliceId, bobId, carolId, danId] = [
+    idByEmail.get("alice@dev.local"),
+    idByEmail.get("bob@dev.local"),
+    idByEmail.get("carol@dev.local"),
+    idByEmail.get("dan@dev.local"),
+  ];
+  if (aliceId && bobId && carolId && danId) {
+    const dm = await createDirectConversation(aliceId, bobId);
+    if (dm.created) console.log("created DM alice↔bob");
+
+    const existing = await listConversations(aliceId);
+    if (!existing.items.some((c) => c.type === "group" && c.name === "Dev Chat")) {
+      await createGroup(aliceId, "Dev Chat", [bobId, carolId, danId]);
+      console.log('created group "Dev Chat"');
+    }
+  } else {
+    console.log("skipped conversation seed (missing seed users)");
+  }
+  // Task 21+: seed messages once the messages table exists.
 
   const total = await db.$count(user);
   console.log(`seed done: ${created} created, ${skipped} skipped, ${total} users total`);
