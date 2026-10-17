@@ -3,7 +3,23 @@
   "nav": {
     "chats": "Chats",
     "contacts": "Contacts",
-    "settings": "Settings"
+    "settings": "Settings",
+    "newChat": "New chat",
+    "search": "Search",
+    "searchPlaceholder": "Search conversations",
+    "details": "Details",
+    "userName": "Guest",
+    "userInitial": "G"
+  },
+  "conversations": {
+    "title": "Conversation",
+    "empty": "Select a conversation",
+    "emptyTitle": "Chat",
+    "stub": "Conversation coming soon",
+    "details": "Details",
+    "closeDetails": "Close details",
+    "detailsEmpty": "Conversation details will appear here",
+    "backToChats": "Back to chats"
   },
   "theme": {
     "light": "Light",

@@ -3,7 +3,23 @@
   "nav": {
     "chats": "Trò chuyện",
     "contacts": "Liên hệ",
-    "settings": "Cài đặt"
+    "settings": "Cài đặt",
+    "newChat": "Cuộc trò chuyện mới",
+    "search": "Tìm kiếm",
+    "searchPlaceholder": "Tìm kiếm cuộc trò chuyện",
+    "details": "Chi tiết",
+    "userName": "Khách",
+    "userInitial": "K"
+  },
+  "conversations": {
+    "title": "Cuộc trò chuyện",
+    "empty": "Chọn một cuộc trò chuyện",
+    "emptyTitle": "Chat",
+    "stub": "Cuộc trò chuyện sắp ra mắt",
+    "details": "Chi tiết",
+    "closeDetails": "Đóng chi tiết",
+    "detailsEmpty": "Chi tiết cuộc trò chuyện sẽ hiển thị ở đây",
+    "backToChats": "Quay lại trò chuyện"
   },
   "theme": {
     "light": "Sáng",
