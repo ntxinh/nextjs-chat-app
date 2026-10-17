@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, SquarePen } from "lucide-react";
+import { LogOut, Search, SquarePen } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -8,11 +8,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { useRouter } from "@/i18n/navigation";
+import { signOut, useSession } from "@/lib/auth/client";
 
 export function Sidebar() {
   const t = useTranslations("nav");
+  const ta = useTranslations("auth");
   const tc = useTranslations("common");
   const tv = useTranslations("conversations");
+  const router = useRouter();
+  const { data } = useSession();
+  const userName = data?.user.name || t("userName");
+  const userInitial = (data?.user.name || t("userInitial")).charAt(0).toUpperCase();
+
+  async function onSignOut() {
+    await signOut();
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <aside className="flex h-full min-h-0 w-full flex-col">
@@ -41,10 +54,19 @@ export function Sidebar() {
       <Separator />
       <div className="flex items-center gap-3 p-3">
         <Avatar>
-          <AvatarFallback>{t("userInitial")}</AvatarFallback>
+          <AvatarFallback>{userInitial}</AvatarFallback>
         </Avatar>
-        <span className="min-w-0 flex-1 truncate font-medium text-sm">{t("userName")}</span>
+        <span className="min-w-0 flex-1 truncate font-medium text-sm">{userName}</span>
         <ThemeToggle />
+        <Button
+          aria-label={ta("signOut")}
+          className="size-11"
+          onClick={onSignOut}
+          size="icon"
+          variant="ghost"
+        >
+          <LogOut aria-hidden="true" />
+        </Button>
       </div>
     </aside>
   );

@@ -26,5 +26,27 @@
     "dark": "Tối",
     "system": "Hệ thống",
     "toggle": "Giao diện"
+  },
+  "auth": {
+    "welcomeBack": "Chào mừng trở lại",
+    "signInSubtitle": "Đăng nhập để tiếp tục vào Chat",
+    "registerSubtitle": "Tạo tài khoản để bắt đầu trò chuyện",
+    "email": "Email",
+    "password": "Mật khẩu",
+    "name": "Tên",
+    "signIn": "Đăng nhập",
+    "signingIn": "Đang đăng nhập…",
+    "createAccount": "Tạo tài khoản",
+    "creatingAccount": "Đang tạo tài khoản…",
+    "signOut": "Đăng xuất",
+    "noAccount": "Chưa có tài khoản?",
+    "hasAccount": "Đã có tài khoản?",
+    "errors": {
+      "invalidCredentials": "Email hoặc mật khẩu không đúng",
+      "emailTaken": "Email này đã được sử dụng",
+      "invalidInput": "Kiểm tra lại thông tin — mật khẩu phải từ 8-128 ký tự",
+      "tooManyAttempts": "Quá nhiều lần thử — vui lòng thử lại sau",
+      "generic": "Đã có lỗi xảy ra — vui lòng thử lại"
+    }
   }
 }

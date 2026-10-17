@@ -26,5 +26,27 @@
     "dark": "Dark",
     "system": "System",
     "toggle": "Theme"
+  },
+  "auth": {
+    "welcomeBack": "Welcome back",
+    "signInSubtitle": "Sign in to continue to Chat",
+    "registerSubtitle": "Create an account to start chatting",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "signIn": "Sign in",
+    "signingIn": "Signing in…",
+    "createAccount": "Create account",
+    "creatingAccount": "Creating account…",
+    "signOut": "Sign out",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "errors": {
+      "invalidCredentials": "Invalid email or password",
+      "emailTaken": "An account with this email already exists",
+      "invalidInput": "Check your input — password must be 8-128 characters",
+      "tooManyAttempts": "Too many attempts — try again later",
+      "generic": "Something went wrong — please try again"
+    }
   }
 }
