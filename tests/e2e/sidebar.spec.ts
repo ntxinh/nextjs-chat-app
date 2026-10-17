@@ -1,12 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { newAuthedPage } from "./auth";
 
-test("sidebar lists, filters, and creates conversations", async ({ page }) => {
-  await page.goto("/en/login");
-  await page.fill('input[name="email"]', "alice@dev.local");
-  await page.fill('input[name="password"]', "password1234");
-  await page.click('button[type="submit"]');
-  await page.waitForURL(/\/en\/?$/);
-
+test("sidebar lists, filters, and creates conversations", async ({ browser }) => {
+  const page = await newAuthedPage(browser, "alice@dev.local");
+  await page.goto("/en");
   // DM (Bob) + group (Dev Chat) listed
   await expect(page.getByRole("link", { name: /Bob/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /Dev Chat/ })).toBeVisible();

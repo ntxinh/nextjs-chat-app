@@ -1,8 +1,28 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
-  "formatter": { "indentStyle": "space", "lineWidth": 100 },
-  "linter": { "enabled": true, "rules": { "preset": "recommended" } },
-  "css": { "parser": { "tailwindDirectives": true } },
-  "assist": { "actions": { "source": { "organizeImports": "on" } } },
-  "files": { "includes": ["src/**", "tests/**", "scripts/**"] }
+  "formatter": {
+    "indentStyle": "space",
+    "lineWidth": 100
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "files": {
+    "includes": ["src/**", "tests/**", "scripts/**", "!tests/e2e/.auth"]
+  }
 }

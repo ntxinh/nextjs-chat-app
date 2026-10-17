@@ -3,6 +3,8 @@
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { useConversation } from "@/features/conversations/hooks";
+import { MessageComposer } from "@/features/messages/message-composer";
+import { MessageList } from "@/features/messages/message-list";
 import { Link } from "@/i18n/navigation";
 
 export function ConversationView({ conversationId }: { conversationId: string }) {
@@ -21,8 +23,9 @@ export function ConversationView({ conversationId }: { conversationId: string })
   }
 
   return (
-    <div className="flex flex-1 items-center justify-center p-4">
-      <p className="text-muted-foreground text-sm">{t("stub")}</p>
-    </div>
+    <>
+      <MessageList conversationId={conversationId} />
+      <MessageComposer conversationId={conversationId} />
+    </>
   );
 }

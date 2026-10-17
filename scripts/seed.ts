@@ -8,12 +8,14 @@
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { readyDb } from "@/lib/db";
-import { user } from "@/lib/db/schema";
+import { messages, user } from "@/lib/db/schema";
+import { setLastRead } from "@/server/repositories/conversations";
 import {
   createDirectConversation,
   createGroup,
   listConversations,
 } from "@/server/services/conversations";
+import { sendMessage } from "@/server/services/messages";
 
 const SEED_USERS = [
   { email: "alice@dev.local", name: "Alice" },
@@ -70,15 +72,67 @@ async function main() {
     const dm = await createDirectConversation(aliceId, bobId);
     if (dm.created) console.log("created DM alice↔bob");
 
+    let groupId: string | undefined;
     const existing = await listConversations(aliceId);
     if (!existing.items.some((c) => c.type === "group" && c.name === "Dev Chat")) {
-      await createGroup(aliceId, "Dev Chat", [bobId, carolId, danId]);
+      groupId = (await createGroup(aliceId, "Dev Chat", [bobId, carolId, danId])).conversationId;
       console.log('created group "Dev Chat"');
+    } else {
+      groupId = existing.items.find((c) => c.type === "group" && c.name === "Dev Chat")?.id;
+    }
+
+    // Messages through the real service with deterministic clientMessageIds —
+    // reruns dedup instead of doubling. 60 in the DM (past the 50/page default)
+    // so history pagination is exercisable, ~10 in the group, back-dated so
+    // createdAt ordering looks real. Members are left fully read so unread
+    // state stays deterministic.
+    const seedHistory = async (
+      conversationId: string,
+      turns: Array<{ senderId: string; body: string }>,
+    ) => {
+      const spacingMs = 75_000;
+      for (const [i, turn] of turns.entries()) {
+        const { message } = await sendMessage(
+          conversationId,
+          turn.senderId,
+          turn.body,
+          `seed-${conversationId}-${i}`,
+        );
+        await db
+          .update(messages)
+          .set({ createdAt: new Date(Date.now() - (turns.length - i) * spacingMs) })
+          .where(eq(messages.id, message.id));
+        if (i === turns.length - 1) {
+          for (const memberId of new Set(turns.map((t2) => t2.senderId))) {
+            await setLastRead(db, { conversationId, userId: memberId, messageId: message.id });
+          }
+        }
+      }
+    };
+
+    const dmTurns = Array.from({ length: 60 }, (_, i) => ({
+      senderId: i % 2 === 0 ? aliceId : bobId,
+      body: `DM message ${i + 1}`,
+    }));
+    dmTurns.push({ senderId: bobId, body: "See you tomorrow!" });
+    await seedHistory(dm.conversationId, dmTurns);
+
+    if (groupId) {
+      const groupTurns = [
+        { senderId: aliceId, body: "Welcome to Dev Chat!" },
+        { senderId: carolId, body: "Hey everyone" },
+        { senderId: danId, body: "Hi!" },
+        { senderId: bobId, body: "What's on the agenda?" },
+        { senderId: aliceId, body: "Shipping the messaging UI" },
+        { senderId: carolId, body: "Nice — polling or websockets?" },
+        { senderId: aliceId, body: "Polling for now, 5s interval" },
+        { senderId: danId, body: "Works for me" },
+      ];
+      await seedHistory(groupId, groupTurns);
     }
   } else {
     console.log("skipped conversation seed (missing seed users)");
   }
-  // Task 21+: seed messages once the messages table exists.
 
   const total = await db.$count(user);
   console.log(`seed done: ${created} created, ${skipped} skipped, ${total} users total`);

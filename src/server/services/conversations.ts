@@ -24,6 +24,7 @@ export type ConversationDetail = ConversationSummary & {
     image: string | null;
     role: "owner" | "member";
     lastSeenAt: Date | null;
+    lastReadMessageId: string | null;
   }>;
 };
 
@@ -183,6 +184,7 @@ export async function getConversation(
     image: u.image,
     role: member.role,
     lastSeenAt: u.lastSeenAt,
+    lastReadMessageId: member.lastReadMessageId,
   }));
 
   const [previews, unreads] = await Promise.all([

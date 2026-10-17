@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@/i18n/navigation";
-import { apiFetch } from "@/lib/api-client";
+import { ApiClientError, apiFetch } from "@/lib/api-client";
 import type { CreateConversationInput } from "@/lib/validation/conversations";
 import type { PublicUser } from "@/server/repositories/users";
 import type { ConversationDetail, ConversationSummary } from "@/server/services/conversations";
@@ -25,6 +25,8 @@ export function useConversation(id: string) {
     queryKey: ["conversations", "detail", id],
     queryFn: () => apiFetch<ConversationDetail>(`/api/v1/conversations/${id}`),
     refetchInterval: 15_000, // members' lastSeenAt goes stale otherwise
+    // 404/403 are terminal — don't sit through retry backoff before isError.
+    retry: (count, error) => !(error instanceof ApiClientError && error.status < 500) && count < 2,
   });
 }
 
