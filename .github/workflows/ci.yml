@@ -1,0 +1,28 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request: {}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - uses: pnpm/action-setup@v4
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm typecheck
+      - run: pnpm test:unit
+      - run: pnpm test:integration
+      # drizzle.config.ts + drizzle-kit arrive in Task 10; until then skip
+      - name: drizzle schema check
+        run: |
+          if test -f drizzle.config.ts; then pnpm db:generate --dry-run; else echo "skipped"; fi
+      - run: pnpm build
+      - run: pnpm playwright install --with-deps chromium
+      - run: pnpm test:e2e
+        env:
+          CI: "true"
