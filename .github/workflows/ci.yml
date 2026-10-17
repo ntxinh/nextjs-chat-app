@@ -15,6 +15,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
       - run: pnpm typecheck
+      - run: pnpm api:check
       - run: pnpm test:unit
       - run: pnpm test:integration
       # drizzle-kit arrived in Task 10; `check` validates migrations vs schema without writing
