@@ -29,17 +29,16 @@ export function ThemeToggle() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        aria-label={t("toggle")}
-        render={<Button className="size-11" size="icon" variant="ghost" />}
-      >
-        {mounted ? (
-          THEMES.map(({ value, Icon }) =>
-            theme === value ? <Icon aria-hidden="true" key={value} /> : null,
-          )
-        ) : (
-          <Monitor aria-hidden="true" />
-        )}
+      <DropdownMenuTrigger asChild>
+        <Button aria-label={t("toggle")} className="size-11" size="icon" variant="ghost">
+          {mounted ? (
+            THEMES.map(({ value, Icon }) =>
+              theme === value ? <Icon aria-hidden="true" key={value} /> : null,
+            )
+          ) : (
+            <Monitor aria-hidden="true" />
+          )}
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuRadioGroup
