@@ -22,6 +22,7 @@ CSS custom properties on `:root` (light) and `.dark`, exposed to Tailwind 4 via 
 | `accent` | `#f1f5f9` | `#1e293b` | Interactive hover/active surface |
 | `accent-foreground` | `#0f172a` | `#f8fafc` | Text on `accent` |
 | `primary` | `#2563eb` | `#3b82f6` | Primary actions, own message bubbles, links |
+| `primary-foreground` | `#ffffff` | `#ffffff` | Text on `primary` |
 | `success` | `#16a34a` | `#22c55e` | Online presence, delivery/success states |
 | `warning` | `#b45309` | `#f59e0b` | Pending/degraded states |
 | `error` | `#dc2626` | `#ef4444` | Destructive actions, send-failure, form errors |
