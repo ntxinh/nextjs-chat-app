@@ -4,5 +4,11 @@
     "chats": "Chats",
     "contacts": "Contacts",
     "settings": "Settings"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "toggle": "Theme"
   }
 }

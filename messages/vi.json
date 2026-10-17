@@ -4,5 +4,11 @@
     "chats": "Trò chuyện",
     "contacts": "Liên hệ",
     "settings": "Cài đặt"
+  },
+  "theme": {
+    "light": "Sáng",
+    "dark": "Tối",
+    "system": "Hệ thống",
+    "toggle": "Giao diện"
   }
 }
