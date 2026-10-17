@@ -5,7 +5,12 @@ export const MESSAGE_BODY_MAX = 4000;
 
 export const sendMessageSchema = z.object({
   body: z.string().trim().min(1).max(MESSAGE_BODY_MAX),
-  clientMessageId: z.string().min(1).optional(),
+  clientMessageId: z.string().min(8).max(64),
+});
+
+export const listMessagesQuery = z.object({
+  cursor: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
 });
 
 export const editMessageSchema = z.object({
