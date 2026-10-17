@@ -13,6 +13,7 @@ import {
   markRead,
   renameGroup,
 } from "@/server/services/conversations";
+import { sendMessage } from "@/server/services/messages";
 import { resetDb } from "./helpers";
 
 const USERS = [
@@ -189,7 +190,8 @@ describe("getConversation", () => {
 describe("markRead", () => {
   it("updates lastReadMessageId for the actor", async () => {
     const { conversationId } = await createGroup(alice.id, "g", [bob.id]);
-    await markRead(bob.id, conversationId, "msg-42");
+    const { message } = await sendMessage(conversationId, bob.id, "hi");
+    await markRead(bob.id, conversationId, message.id);
     const db = await readyDb();
     const bobRow = (
       await db
@@ -197,7 +199,7 @@ describe("markRead", () => {
         .from(conversationMembers)
         .where(eq(conversationMembers.conversationId, conversationId))
     ).find((r) => r.userId === bob.id);
-    expect(bobRow?.lastReadMessageId).toBe("msg-42");
+    expect(bobRow?.lastReadMessageId).toBe(message.id);
   });
 
   it("rejects empty messageId and non-members", async () => {

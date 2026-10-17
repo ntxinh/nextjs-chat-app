@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  check,
   index,
   integer,
   primaryKey,
@@ -110,7 +111,7 @@ export const conversationMembers = sqliteTable(
       .notNull()
       .default("member"),
     joinedAt: integer("joined_at", { mode: "timestamp_ms" }).notNull(),
-    lastReadMessageId: text("last_read_message_id"),
+    lastReadMessageId: text("last_read_message_id").references(() => messages.id),
     leftAt: integer("left_at", { mode: "timestamp_ms" }),
   },
   (t) => [
@@ -136,5 +137,30 @@ export const directConversationPairs = sqliteTable(
   (t) => [
     primaryKey({ columns: [t.userA, t.userB] }),
     uniqueIndex("direct_conversation_pairs_conversationId_idx").on(t.conversationId),
+  ],
+);
+
+export const messages = sqliteTable(
+  "messages",
+  {
+    id: text("id").primaryKey(),
+    conversationId: text("conversation_id")
+      .notNull()
+      .references(() => conversations.id, { onDelete: "cascade" }),
+    senderId: text("sender_id")
+      .notNull()
+      .references(() => user.id),
+    body: text("body").notNull(),
+    // timestamp_ms (Date) to match every other table — the brief sketched
+    // mode:"number" epoch ints; Date keeps the rest of the codebase uniform.
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    editedAt: integer("edited_at", { mode: "timestamp_ms" }),
+    deletedAt: integer("deleted_at", { mode: "timestamp_ms" }),
+    clientMessageId: text("client_message_id"),
+  },
+  (t) => [
+    index("messages_conv_cursor").on(t.conversationId, t.createdAt, t.id),
+    uniqueIndex("messages_idempotency").on(t.senderId, t.clientMessageId),
+    check("messages_body_len", sql`length(${t.body}) <= 4000`),
   ],
 );

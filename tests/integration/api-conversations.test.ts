@@ -19,6 +19,7 @@ import { readyDb } from "@/lib/db";
 import { user } from "@/lib/db/schema";
 import { AppError } from "@/lib/errors/app-error";
 import { requireApiUser } from "@/server/policies/auth";
+import { sendMessage } from "@/server/services/messages";
 import { resetDb } from "./helpers";
 
 // Auth boundary mocked — session plumbing is covered by better-auth; these
@@ -251,17 +252,30 @@ describe("POST /read", () => {
       ),
     );
     const convId = res.body.data.conversationId as string;
+    // markRead now validates the message exists in this conversation (T21).
+    const { message } = await sendMessage(convId, bob.id, "m for read");
 
     asUser(bob);
     expect(
-      (await markRead(req("", { method: "POST", body: { messageId: "m1" } }), convCtx(convId)))
-        .status,
+      (
+        await markRead(
+          req("", { method: "POST", body: { messageId: message.id } }),
+          convCtx(convId),
+        )
+      ).status,
     ).toBe(200);
+    expect(
+      (
+        await markRead(
+          req("", { method: "POST", body: { messageId: "no-such-msg" } }),
+          convCtx(convId),
+        )
+      ).status,
+    ).toBe(404);
     expect(
       (await markRead(req("", { method: "POST", body: { messageId: "" } }), convCtx(convId)))
         .status,
     ).toBe(400);
-
     asUser(carol);
     expect(
       (await markRead(req("", { method: "POST", body: { messageId: "m1" } }), convCtx(convId)))

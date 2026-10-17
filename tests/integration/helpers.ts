@@ -7,6 +7,7 @@ export async function resetDb() {
   for (const t of [
     "direct_conversation_pairs",
     "conversation_members",
+    "messages",
     "conversations",
     "verification",
     "session",

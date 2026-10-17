@@ -1,18 +1,19 @@
 import "server-only";
+import { decodeCursor, encodeCursor } from "@/lib/cursor";
 import { readyDb } from "@/lib/db";
 import { normalizePair } from "@/lib/dm-pair";
 import { AppError } from "@/lib/errors/app-error";
 import { assertMembership } from "@/server/policies/conversations";
 import * as repo from "@/server/repositories/conversations";
+import * as msgRepo from "@/server/repositories/messages";
 import { findUsersByIds } from "@/server/repositories/users";
 
 export type ConversationSummary = {
   id: string;
   type: "direct" | "group";
   name: string | null;
-  // TODO(T21): join messages — real shape ships now, values land with the messages table.
   preview: { body: string; senderName: string; createdAt: Date } | null;
-  unreadCount: number; // TODO(T21): countUnread vs lastReadMessageId watermark
+  unreadCount: number;
   otherUser?: { id: string; name: string; image: string | null };
 };
 
@@ -26,28 +27,20 @@ export type ConversationDetail = ConversationSummary & {
   }>;
 };
 
-// TODO(T21): replace with shared cursor.ts codec once it lands — same base64url
-// [ts, id] keyset pattern, kept local here to avoid inventing the contract early.
-function encodeCursor(updatedAt: Date, id: string): string {
-  return Buffer.from(JSON.stringify([updatedAt.getTime(), id])).toString("base64url");
-}
+/** Preview bodies truncated — lists shouldn't ship whole messages. */
+const PREVIEW_LEN = 100;
 
-function decodeCursor(cursor: string): { updatedAt: Date; id: string } {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(Buffer.from(cursor, "base64url").toString("utf8"));
-  } catch {
-    throw new AppError(400, "bad_request", "Invalid cursor");
-  }
-  if (
-    !Array.isArray(parsed) ||
-    parsed.length !== 2 ||
-    typeof parsed[0] !== "number" ||
-    typeof parsed[1] !== "string"
-  ) {
-    throw new AppError(400, "bad_request", "Invalid cursor");
-  }
-  return { updatedAt: new Date(parsed[0]), id: parsed[1] };
+function toPreview(p: {
+  body: string;
+  senderName: string;
+  createdAt: Date;
+  deleted: boolean;
+}): ConversationSummary["preview"] {
+  return {
+    body: p.deleted ? "" : p.body.slice(0, PREVIEW_LEN),
+    senderName: p.senderName,
+    createdAt: p.createdAt,
+  };
 }
 
 export async function createDirectConversation(
@@ -127,9 +120,11 @@ export async function listConversations(
   limit = 20,
 ): Promise<{ items: ConversationSummary[]; nextCursor: string | null }> {
   const db = await readyDb();
+  const decoded = cursor ? decodeCursor(cursor) : null;
+  if (cursor && !decoded) throw new AppError(400, "bad_request", "Invalid cursor");
   const rows = await repo.listByUser(db, {
     userId: actorId,
-    cursor: cursor ? decodeCursor(cursor) : undefined,
+    cursor: decoded ? { updatedAt: new Date(decoded.createdAt), id: decoded.id } : undefined,
     limit: limit + 1,
   });
 
@@ -144,13 +139,20 @@ export async function listConversations(
   );
   const peerByConv = new Map(peers.map((p) => [p.conversationId, p]));
 
+  const convIds = page.map((c) => c.id);
+  const [previews, unreads] = await Promise.all([
+    msgRepo.latestPerConversation(db, convIds),
+    msgRepo.unreadCounts(db, { userId: actorId, conversationIds: convIds }),
+  ]);
+
   const items = page.map((c): ConversationSummary => {
+    const p = previews.get(c.id);
     const summary: ConversationSummary = {
       id: c.id,
       type: c.type,
       name: c.name,
-      preview: null,
-      unreadCount: 0,
+      preview: p ? toPreview(p) : null,
+      unreadCount: unreads.get(c.id) ?? 0,
     };
     if (c.type === "direct") {
       const peer = peerByConv.get(c.id);
@@ -159,7 +161,10 @@ export async function listConversations(
     return summary;
   });
 
-  return { items, nextCursor: hasMore && last ? encodeCursor(last.updatedAt, last.id) : null };
+  return {
+    items,
+    nextCursor: hasMore && last ? encodeCursor(last.updatedAt.getTime(), last.id) : null,
+  };
 }
 
 export async function getConversation(
@@ -180,12 +185,17 @@ export async function getConversation(
     lastSeenAt: u.lastSeenAt,
   }));
 
+  const [previews, unreads] = await Promise.all([
+    msgRepo.latestPerConversation(db, [convId]),
+    msgRepo.unreadCounts(db, { userId: actorId, conversationIds: [convId] }),
+  ]);
+  const preview = previews.get(convId);
   const detail: ConversationDetail = {
     id: conv.id,
     type: conv.type,
     name: conv.name,
-    preview: null,
-    unreadCount: 0,
+    preview: preview ? toPreview(preview) : null,
+    unreadCount: unreads.get(convId) ?? 0,
     members,
   };
   if (conv.type === "direct") {
@@ -263,7 +273,10 @@ export async function markRead(actorId: string, convId: string, messageId: strin
   if (typeof messageId !== "string" || messageId.length === 0) {
     throw new AppError(400, "bad_request", "messageId required");
   }
-  // TODO(T21/22): validate messageId exists in `messages` once the table lands —
-  // lastReadMessageId is a plain text column until then.
+  const message = await msgRepo.findByIdWithSender(db, messageId);
+  // Wrong-conversation message is a 404 too — don't leak that it exists.
+  if (!message || message.message.conversationId !== convId) {
+    throw new AppError(404, "not_found", "Message not found");
+  }
   await repo.setLastRead(db, { conversationId: convId, userId: actorId, messageId });
 }
