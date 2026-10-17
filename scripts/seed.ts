@@ -49,9 +49,9 @@ async function main() {
     }
   }
 
-  // TODO(Task 16): seed one DM (alice↔bob), one "Dev Chat" group (alice owner,
-  // all members), ~30 messages with staggered new Date() createdAt — once the
-  // conversations/messages schema lands. INSERT OR IGNORE / onConflictDoNothing.
+  // TODO(Task 17): wire conversation seeding through the conversation service —
+  // DM alice↔bob + "Dev Chat" group (alice owner, all 4 members). Messages land
+  // with Task 21's schema. Raw inserts would duplicate service logic.
 
   const total = await db.$count(user);
   console.log(`seed done: ${created} created, ${skipped} skipped, ${total} users total`);

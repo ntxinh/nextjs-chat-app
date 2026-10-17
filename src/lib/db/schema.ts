@@ -1,5 +1,12 @@
 import { sql } from "drizzle-orm";
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  index,
+  integer,
+  primaryKey,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
 
 // Shapes reconciled against `@better-auth/cli generate` output — adapter field
 // names/types win; timestamps are `timestamp_ms` (JS Date, integer ms storage).
@@ -77,4 +84,57 @@ export const verification = sqliteTable(
       .notNull(),
   },
   (table) => [index("verification_identifier_idx").on(table.identifier)],
+);
+
+export const conversations = sqliteTable("conversations", {
+  id: text("id").primaryKey(),
+  type: text("type", { enum: ["direct", "group"] }).notNull(),
+  name: text("name"), // null for DMs
+  createdBy: text("created_by")
+    .notNull()
+    .references(() => user.id),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+export const conversationMembers = sqliteTable(
+  "conversation_members",
+  {
+    conversationId: text("conversation_id")
+      .notNull()
+      .references(() => conversations.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id),
+    role: text("role", { enum: ["owner", "member"] })
+      .notNull()
+      .default("member"),
+    joinedAt: integer("joined_at", { mode: "timestamp_ms" }).notNull(),
+    lastReadMessageId: text("last_read_message_id"),
+    leftAt: integer("left_at", { mode: "timestamp_ms" }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.conversationId, t.userId] }),
+    index("conversation_members_userId_idx").on(t.userId),
+  ],
+);
+
+export const directConversationPairs = sqliteTable(
+  "direct_conversation_pairs",
+  {
+    // userA < userB — always normalized via normalizePair(); composite PK makes dup DMs impossible.
+    userA: text("user_a")
+      .notNull()
+      .references(() => user.id),
+    userB: text("user_b")
+      .notNull()
+      .references(() => user.id),
+    conversationId: text("conversation_id")
+      .notNull()
+      .references(() => conversations.id, { onDelete: "cascade" }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userA, t.userB] }),
+    uniqueIndex("direct_conversation_pairs_conversationId_idx").on(t.conversationId),
+  ],
 );
